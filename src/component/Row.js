@@ -2,6 +2,7 @@ import { Typography, makeStyles, Box } from '@material-ui/core';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import YouTube from 'react-youtube';
+import movieTailer from 'movie-trailer';
 import axios from '../api';
 const base_url = 'https://image.tmdb.org/t/p/original/';
 const useStyles = makeStyles((theme) => ({
@@ -45,7 +46,7 @@ const useStyles = makeStyles((theme) => ({
 const Row = ({ title, fetchUrl, isLargeRow }) => {
   const classes = useStyles();
   const [movies, setMovies] = useState([]);
-  const [videos, setVideos] = useState([]);
+  const [trailerUrl, setTrailerUrl] = useState('');
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -57,16 +58,25 @@ const Row = ({ title, fetchUrl, isLargeRow }) => {
   }, [fetchUrl]);
   const opts = {
     height: '390',
-    width: '640',
+    width: '100%',
     playerVars: {
       // https://developers.google.com/youtube/player_parameters
       autoplay: 1,
     },
   };
-  const handleClick (movie)=>{
-    // 
-
-  }
+  const handleClick = (movie) => {
+    if (trailerUrl) {
+      setTrailerUrl('');
+    } else {
+      movieTailer(movie?.name || '')
+        .then((url) => {
+          const urlParams = new URLSearchParams(new URL(url).search);
+          setTrailerUrl(urlParams.get('v'));
+        })
+        .catch((err) => console.log(err));
+    }
+    //
+  };
 
   return (
     <Box className={classes.main}>
@@ -88,7 +98,7 @@ const Row = ({ title, fetchUrl, isLargeRow }) => {
           />
         ))}
       </Box>
-      <YouTube videoId={trailerUrl} opts={opts} />
+      {trailerUrl && <YouTube videoId={trailerUrl} opts={opts} />}
     </Box>
   );
 };
